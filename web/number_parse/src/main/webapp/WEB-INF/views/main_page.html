@@ -1,0 +1,160 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>Number parse</title>
+    <style>
+        #numbers {
+            position: absolute;
+            left: 30%;
+            top: 1%;
+        }
+
+        #parameters {
+            position: absolute;
+            left: 40%;
+            top: 1%;
+        }
+
+        #result {
+            position: absolute;
+            left: 25%;
+            top: 60%;
+        }
+
+        #condition {
+            display: inline-block;
+        }
+
+        p {
+            margin-bottom: 10px;
+        }
+
+        h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+        #listOfNumbersId {
+            resize: none;
+        }
+
+        #resultList {
+            resize: none;
+        }
+    </style>
+    <link rel="stylesheet" href="/resources/dist/pretty-checkbox.min.css"/>
+</head>
+<body>
+<form action="insert" method="post" onsubmit="convertArray(listOfNumbersId,charEqualNumbersId,charEqualsId)">
+    <div id="numbers">
+            <textarea Id='listOfNumbersId' name="listOfNumbersName" col='20' rows='30' th:text="${condition}"
+                      placeholder="Условие, столбцом без разделителей."></textarea>
+        <p><input type="submit" value="Submit"></p>
+    </div>
+    <div id="parameters">
+        <h3>Параметры:</h3>
+        <p title="Ресурсная система - на выбор 2 значения LIS или RIM, от этого зависит название таблиц и полей в составе инсерта.">
+            Ресурсная система*: <input id="resourceSystemId" name="resourceSystem" type="text" required
+                                       th:value="${paramResourceSystem}">
+        </p>
+
+        <p title="ID класса, к которому будет привязано условие - значение ключа просто будет подставленно соответствующему полю в инсерте.">
+            ID класса*: <input id="idClassId" name="idClass" type="text" required th:value="${paramIdClass}"></p>
+
+        <div id="condition">
+            <p title="Могут ли цифры на позициях букв в маске равняться цифрам на позиции других букв в маске?">A !=
+                B</p></div>
+        <div class="pretty p-switch p-slim"><input id="charEqualsId" name="charEquals"
+                                                   type="checkbox" th:value="${paramCharEquals}">
+            <div class="state"><label></label></div>
+        </div>
+        <div id="condition">
+            <p title="Могут ли цифры на позициях букв в маске равняться цифрам на позиции других букв в маске?">A =
+                B</p></div>
+
+
+        <p title="Символы, которые не будет учитываться при формиовании условия, без разделителей.">Символы, которые
+            можно не
+            учитывать: <input
+                    id="charNotWorkingWithId" name="charNotWorkingWith" type="text"
+                    th:value="${paramCharNotWorkingWith}"></p>
+
+        <div id="condition">
+            <p title="Могут ли цифры на позициях букв в маске равняться цифрам из маски?">A != 1</p></div>
+        <div class="pretty p-switch p-slim"><input id="charEqualNumbersId" name="charEqualNumbers" type="checkbox"
+                                                   th:value="${paramCharEqualNumbers}">
+            <div class="state"><label></label></div>
+        </div>
+        <div id="condition">
+            <p title="Могут ли цифры на позициях букв в маске равняться цифрам из маски?">A = 1</p></div>
+
+
+        <p title="Параметр, который определяет смещение в условии класса. Принимает в качестве значения цифру, если смешение не нужно, то оставьте поле пустым.">
+            Смещение: <input id="displacementId" name="displacement" type="text" th:value="${paramDisplacement}"></p>
+
+        <p title="Параметр, значение которого конкатенируется с условием в начале. Принимает любые значения, если в этом нет необходимости оставьте поле пустым.">
+            Строка конкатинации условия: <input id="stringForConcatenationConditionId"
+                                                name="stringForConcatenationCondition" type="text"
+                                                th:value="${paramStringForConcatenationCondition}"
+        >
+        </p>
+
+        <p title="Параметр, значение которого конкатенируется с тестовым номером в начале. Принимает любые значения, если в этом нет необходимости оставьте поле пустым.">
+            Строка конкатинации тестового номера: <input id="stringForConcatenationTestMSISDNId"
+                                                         name="stringForConcatenationTestMSISDN" type="text"
+                                                         th:value="${paramStringForConcatenationTestMSISDN}"
+        ></p>
+
+        <p title="Дополнительное условие, которое будет выполняться отдельно от остальных параметров, односложное, вроде A=B или A!=B. Символы из этого условия будут игнорироваться в основном.">
+            Дополнительное условие: <input id="addConditionId"
+                                           name="addCondition" type="text"
+                                           th:value="${paramAddCondition}"
+        ></p>
+
+        <div id="condition"><p
+                title="Отметь чекбокс если нужны только условия разбора масок, в противном случае оставь пустым.">
+            Только условия</p></div>
+        <div class="pretty p-svg p-curve"><input id="onlyConditionId" name="onlyCondition"
+                                                 type="checkbox" th:value="${paramOnlyCondition}">
+            <div class="state p-success">
+                <!-- svg path -->
+                <svg class="svg svg-icon" viewBox="0 0 20 20">
+                    <path d="M7.629,14.566c0.125,0.125,0.291,0.188,0.456,0.188c0.164,0,0.329-0.062,0.456-0.188l8.219-8.221c0.252-0.252,0.252-0.659,0-0.911c-0.252-0.252-0.659-0.252-0.911,0l-7.764,7.763L4.152,9.267c-0.252-0.251-0.66-0.251-0.911,0c-0.252,0.252-0.252,0.66,0,0.911L7.629,14.566z"
+                          style="stroke: white;fill:white;"></path>
+                </svg>
+                <label></label>
+            </div>
+        </div>
+        </p>
+    </div>
+    <div id="result">
+        <textarea id="resultList" th:text="${resultlist}" cols="137" rows="15" placeholder="Результат."></textarea>
+    </div>
+</form>
+<script>
+    //Запоминаем состояние чекбоксов
+    if (document.getElementById("onlyConditionId").value == "true") {
+        document.getElementById("onlyConditionId").checked = true;
+    }
+    if (document.getElementById("charEqualNumbersId").value == "A=1") {
+        document.getElementById("charEqualNumbersId").checked = true;
+    }
+    if (document.getElementById("charEqualsId").value == "A=B") {
+        document.getElementById("charEqualsId").checked = true;
+    }
+    //Причесываем результат
+    let res = document.getElementById("resultList").textContent.replace("[", "");
+    res = res.replace("]", "");
+    res = res.replace(/, insert/g, "insert");
+    document.getElementById("resultList").textContent = res;
+    document.getElementById("listOfNumbersId").textContent = document.getElementById("listOfNumbersId").textContent.replace(/,/g, "\n");
+
+    //Причесываем запрос
+    function convertArray(listOfNumbers, charEqualNumbers, charEquals) {
+        let arrayOfLines = listOfNumbers.value.replace(/\r\n/g, "\n").split('\n');
+        listOfNumbers.value = arrayOfLines;
+    }
+</script>
+</body>
+</html>

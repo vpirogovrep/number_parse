@@ -7,7 +7,7 @@ public class number_parse {
     static private String pathToResult;
     static private String resourceSystem;
     static private String idClass;
-    static private String alphabet;
+    static private ArrayList<String> alphabet;
     static private String charEquals;
     static private String charNotWorkingWith;
     static private String charEqualNumbers;
@@ -24,18 +24,30 @@ public class number_parse {
         }
     }
 
-    private static void fillParams(String[] args) {
+    private static void fillParams(String[] args) throws Exception {
+        //Формируем алфавит для генерации тестовых номеров
+        BufferedReader bufferForAlphabet = new BufferedReader(new InputStreamReader(new FileInputStream(args[0])));
+        ArrayList<String> listOfAlphabet = new ArrayList<>();
+        String lineFromFile;
+        while ((lineFromFile = bufferForAlphabet.readLine()) != null) {
+            for (int i = 0; i < lineFromFile.toCharArray().length; i++) {
+                if (isChar(Character.toString(lineFromFile.toCharArray()[i])) && !listOfAlphabet.contains(Character.toString(lineFromFile.toCharArray()[i]))) {
+                    listOfAlphabet.add(Character.toString(lineFromFile.toCharArray()[i]));
+                }
+            }
+        }
+        bufferForAlphabet.close();
         pathToConditions = args[0];
         pathToResult = args[1];
         resourceSystem = args[2];
         idClass = args[3];
-        alphabet = args[4];
-        charEquals = args[5];
-        charNotWorkingWith = args[6];
-        charEqualNumbers = args[7];
-        displacement = args[8];
-        stringForConcatenationCondition = args[9];
-        //stringForConcatenationTestMSISDN = args[10];
+        alphabet = listOfAlphabet;
+        charEquals = args[4];
+        charNotWorkingWith = args[5];
+        charEqualNumbers = args[6];
+        displacement = args[7];
+        stringForConcatenationCondition = args[8];
+        stringForConcatenationTestMSISDN = args[9];
     }
 
     private static void generateInsert() throws Exception {
@@ -59,11 +71,11 @@ public class number_parse {
             String insert = "";
             if (resourceSystem.equals("LIS")) {
                 insert = "insert into LIS_NUMBER_CLASS_CONDITIONS (NCLSC_ID, NAVI_DATE, NAVI_USER, CONDITION_STRING, IS_ACTIVE, NAME, TEST_MSISDN, MRGN_MRGN_ID, NCLST_NCLST_ID)\n" +
-                        "values (NCLSC_SEQ.nextval, sysdate, 'Admin', '" + stringForConcatenationCondition + parseMSISDN(MSISDN) + "', 'Y', '" + MSISDN + "', '" /*+ stringForConcatenationTestMSISDN*/ + genTestMSISDN(MSISDN) + "', 1, " + idClass + ");\n";
+                        "values (NCLSC_SEQ.nextval, sysdate, 'Admin', '" + stringForConcatenationCondition + parseMSISDN(MSISDN) + "', 'Y', '" + MSISDN + "', '" + stringForConcatenationTestMSISDN + genTestMSISDN(MSISDN) + "', 1, " + idClass + ");\n";
             }
             if (resourceSystem.equals("RIM")) {
                 insert = "insert into NUMBER_CLASS_TEMPLATES (NCTE_ID, NCLS_NCLS_ID, DEF, TEMPLATE, ACTIVE_YN, TEST_NUMBER, NAVI_USER, NAVI_DATE, BRNC_BRNC_ID)\n" +
-                        "values (NCTE_SEQ.nextval, " + idClass + ", '" + MSISDN + "', '" + stringForConcatenationCondition + parseMSISDN(MSISDN) + "', 'Y', '" /*+ stringForConcatenationTestMSISDN*/ + genTestMSISDN(MSISDN) + "', 'BIS', sysdate, 0);\n";
+                        "values (NCTE_SEQ.nextval, " + idClass + ", '" + MSISDN + "', '" + stringForConcatenationCondition + parseMSISDN(MSISDN) + "', 'Y', '" + stringForConcatenationTestMSISDN + genTestMSISDN(MSISDN) + "', 'BIS', sysdate, 0);\n";
             }
             bufferedWriter.write(insert);
         }
@@ -96,13 +108,13 @@ public class number_parse {
             for (int a = i + 1; a < arrayOfMSISDN.length; a++) {
                 String letterWhichCompare = Character.toString(arrayOfMSISDN[i]);
                 String letterWithWhichCompared = Character.toString(arrayOfMSISDN[a]);
-                if (charNotWorkingWith.equals("!X")) {
-                    if (letterWhichCompare.equals(letterWithWhichCompared) && isChar(letterWhichCompare) && !wasBefore(letterWhichCompare, MSISDN, howMachRepeat, i)/*Метод проверяет, обрабатывался ли символ до текущей итерации цикла или нет*/&& !letterWhichCompare.equals("X")) {
+                if (!charNotWorkingWith.equals("")) {
+                    if (letterWhichCompare.equals(letterWithWhichCompared) && isChar(letterWhichCompare) && !wasBefore(letterWhichCompare, MSISDN, howMachRepeat, i)/*Метод проверяет, обрабатывался ли символ до текущей итерации цикла или нет*/ && !letterWhichCompare.equals(charNotWorkingWith)) {
                         whereFound.get(i).add(a);//При совпадении добавляем адрес, где встретился символ
                         howMachRepeat.set(i, howMachRepeat.get(i) + 1);//И добавляем количесвто повторений
                     }
                 }
-                if (charNotWorkingWith.equals("X")) {
+                if (charNotWorkingWith.equals("")) {
                     if (letterWhichCompare.equals(letterWithWhichCompared) && isChar(letterWhichCompare) && !wasBefore(letterWhichCompare, MSISDN, howMachRepeat, i)) {
                         whereFound.get(i).add(a);
                         howMachRepeat.set(i, howMachRepeat.get(i) + 1);
@@ -145,8 +157,8 @@ public class number_parse {
                                 && isChar(Character.toString(arrayOfMSISDN[k])) //Если символ, с которым сравнивается обрабатываемая буква, это буква
                                 && !Character.toString(arrayOfMSISDN[k]).equals(Character.toString(arrayOfMSISDN[j]))//Если две буквы не совпадают
                         ) {
-                            if (charNotWorkingWith.equals("!X")) {
-                                if (!Character.toString(arrayOfMSISDN[k]).equals("X") && !Character.toString(arrayOfMSISDN[j]).equals("X")) {
+                            if (!charNotWorkingWith.equals("")) {
+                                if (!Character.toString(arrayOfMSISDN[k]).equals(charNotWorkingWith) && !Character.toString(arrayOfMSISDN[j]).equals(charNotWorkingWith)) {
                                     if (resourceSystem.equals("LIS")) {
                                         if (!result.equals("")) {
                                             result = result + " and not ";
@@ -163,7 +175,7 @@ public class number_parse {
                                     }
                                 }
                             }
-                            if (charNotWorkingWith.equals("X")) {
+                            if (charNotWorkingWith.equals("")) {
                                 if (resourceSystem.equals("LIS")) {
                                     if (!result.equals("")) {
                                         result = result + " and not ";
@@ -197,8 +209,8 @@ public class number_parse {
                                 && !listOfLettersWithWhichCompered.contains(arrayOfMSISDN[k])//Если цифра, с которой сравнивают обрабатываемую, еще не встречалась
                                 && !isChar(Character.toString(arrayOfMSISDN[k]))//Если символ, с которым сравнивается обрабатываемая буква, это цифра
                         ) {
-                            if (charNotWorkingWith.equals("!X")) {
-                                if (!Character.toString(arrayOfMSISDN[j]).equals("X")) {
+                            if (!charNotWorkingWith.equals("")) {
+                                if (!Character.toString(arrayOfMSISDN[j]).equals(charNotWorkingWith)) {
                                     if (resourceSystem.equals("LIS")) {
                                         if (!result.equals("")) {
                                             result = result + " and not ";
@@ -215,7 +227,7 @@ public class number_parse {
                                     }
                                 }
                             }
-                            if (charNotWorkingWith.equals("X")) {
+                            if (charNotWorkingWith.equals("")) {
                                 if (resourceSystem.equals("LIS")) {
                                     if (!result.equals("")) {
                                         result = result + " and not ";
@@ -266,31 +278,19 @@ public class number_parse {
         return false;
     }
 
-    private static String genTestMSISDN(String MSISDN) {
+    private static String genTestMSISDN(String MSISDN) throws Exception {
+        ArrayList<String> listOfNumbersForGenerate = new ArrayList<>(Arrays.asList("0", "1", "2", "3", "4", "5", "6", "7", "8", "9"));
         String result = "";
-        if (alphabet.toCharArray().length == 10 && charEqualNumbers.equals("A=1")) {
+        if (charEqualNumbers.equals("A=1")) {
             char[] arrayOfMSISDN = MSISDN.toCharArray();
             for (int p = 0; p < arrayOfMSISDN.length; p++) {
-                if (Character.toString(arrayOfMSISDN[p]).equals(Character.toString(alphabet.toCharArray()[0]))) {
-                    arrayOfMSISDN[p] = '1';
-                } else if (Character.toString(arrayOfMSISDN[p]).equals(Character.toString(alphabet.toCharArray()[1]))) {
-                    arrayOfMSISDN[p] = '2';
-                } else if (Character.toString(arrayOfMSISDN[p]).equals(Character.toString(alphabet.toCharArray()[2]))) {
-                    arrayOfMSISDN[p] = '3';
-                } else if (Character.toString(arrayOfMSISDN[p]).equals(Character.toString(alphabet.toCharArray()[3]))) {
-                    arrayOfMSISDN[p] = '4';
-                } else if (Character.toString(arrayOfMSISDN[p]).equals(Character.toString(alphabet.toCharArray()[4]))) {
-                    arrayOfMSISDN[p] = '5';
-                } else if (Character.toString(arrayOfMSISDN[p]).equals(Character.toString(alphabet.toCharArray()[5]))) {
-                    arrayOfMSISDN[p] = '6';
-                } else if (Character.toString(arrayOfMSISDN[p]).equals(Character.toString(alphabet.toCharArray()[6]))) {
-                    arrayOfMSISDN[p] = '7';
-                } else if (Character.toString(arrayOfMSISDN[p]).equals(Character.toString(alphabet.toCharArray()[7]))) {
-                    arrayOfMSISDN[p] = '8';
-                } else if (Character.toString(arrayOfMSISDN[p]).equals(Character.toString(alphabet.toCharArray()[8]))) {
-                    arrayOfMSISDN[p] = '9';
-                } else if (Character.toString(arrayOfMSISDN[p]).equals(Character.toString(alphabet.toCharArray()[9]))) {
-                    arrayOfMSISDN[p] = '0';
+                if (isChar(Character.toString(arrayOfMSISDN[p]))) {
+                    for (int i = 0; i < alphabet.size(); i++) {
+                        if (alphabet.get(i).equals(Character.toString(arrayOfMSISDN[p]))) {
+                            //Если в маске встретился символ и он совпал с символом из алфавита, то замещаем его цифрой, которой соответсвтует тот же интдекс что и символу из алфавита
+                            arrayOfMSISDN[p] = listOfNumbersForGenerate.get(i).charAt(0);
+                        }
+                    }
                 }
             }
             for (int y = 0; y < arrayOfMSISDN.length; y++) {
@@ -300,9 +300,11 @@ public class number_parse {
         }
         if (charEqualNumbers.equals("A!=1")) {
             char[] arrayOfMSISDN = MSISDN.toCharArray();
+            //Формируем отдельно для каждой маски массив букв и цифр, а так же массив тех цифр, что не встречаются в маске
             ArrayList<String> ArrayOfNumeralInNumber = new ArrayList<>();
             ArrayList<String> ArrayOfCharInNumber = new ArrayList<>();
-            HashMap<String, Integer> ArrayOfCharWithNumeralInNumber = new HashMap<>();
+            ArrayList<String> ArrayOfNumeralForReplace = new ArrayList<>();
+            //Заполняем массивы букв и цифр
             for (int p = 0; p < arrayOfMSISDN.length; p++) {
                 if (!isChar(Character.toString(arrayOfMSISDN[p]))) {
                     ArrayOfNumeralInNumber.add(Character.toString(arrayOfMSISDN[p]));
@@ -311,24 +313,35 @@ public class number_parse {
                     ArrayOfCharInNumber.add(Character.toString(arrayOfMSISDN[p]));
                 }
             }
-            ArrayList<Integer> ArrayOfNumeralForReplace = new ArrayList<>(Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7, 8, 9));
-            for (int z = 0; z < ArrayOfCharInNumber.size(); z++) {
-                for (int g = 0; g < 10; g++) {
-                    if (!ArrayOfNumeralInNumber.contains(Integer.toString(g)) && !ArrayOfCharWithNumeralInNumber.containsKey(ArrayOfCharInNumber.get(z)) && !ArrayOfCharWithNumeralInNumber.containsValue(g)) {
-                        ArrayOfCharWithNumeralInNumber.put(ArrayOfCharInNumber.get(z), g);
-                        if (g < ArrayOfNumeralForReplace.size()) {
-                            ArrayOfNumeralForReplace.remove(g);
+            //Если их сумма больше 10, то выбрасываем исключение
+            if (ArrayOfCharInNumber.size() + ArrayOfNumeralInNumber.size() > 10) {
+                throw new Exception("В маске " + MSISDN + " слишком много символов, так как цифры на их месте не могут быть равны цифрам из маски, то цифр просто не хватит.");
+            }
+            //Теперь формируем из массива всех цифр, массив тех, которых нет в маске
+            for (int i = 0; i < listOfNumbersForGenerate.size(); i++) {
+                if (!ArrayOfNumeralInNumber.contains(listOfNumbersForGenerate.get(i))) {
+                    ArrayOfNumeralForReplace.add(listOfNumbersForGenerate.get(i));
+                }
+            }
+
+            //
+            for (int p = 0; p < arrayOfMSISDN.length; p++) {
+                if (isChar(Character.toString(arrayOfMSISDN[p]))) {
+                    for (int i = 0; i < ArrayOfCharInNumber.size(); i++) {
+                        if (ArrayOfCharInNumber.get(i).equals(Character.toString(arrayOfMSISDN[p]))) {
+                            //Если в маске встретился символ и он совпал с символом из ArrayOfCharInNumber, то замещаем его цифрой из ArrayOfNumeralForReplace, которой соответсвтует тот же интдекс что и символу из алфавита
+                            arrayOfMSISDN[p] = ArrayOfNumeralForReplace.get(i).charAt(0);
                         }
-                        break;
                     }
                 }
             }
+
             for (int y = 0; y < arrayOfMSISDN.length; y++) {
                 if (!isChar(Character.toString(arrayOfMSISDN[y]))) {
                     result = result + arrayOfMSISDN[y];
                 }
                 if (isChar(Character.toString(arrayOfMSISDN[y]))) {
-                    result = result + ArrayOfCharWithNumeralInNumber.get(Character.toString(arrayOfMSISDN[y]));
+                    result = result + arrayOfMSISDN[y];
                 }
             }
             return result;
